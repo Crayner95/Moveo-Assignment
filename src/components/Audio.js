@@ -59,6 +59,7 @@ const initialBeat = [
 ]
 
 const song = initialBeat.map(beat => new Audio(process.env.PUBLIC_URL + beat.path))
+const songLength = 17000
 
 function Beat() {
   const [time, setTime] = useState("");
@@ -67,18 +68,19 @@ function Beat() {
   const [playing, setPlaying] = useState(false);
   const [intervalID, setIntervalID] = useState(null);
   const [beatAudio, setBeatAudio] = useState([]);
+  const [songTime, setSongTime] = useState(0)
 
   // useEffect(() => {
   //   setBeatAudio(initialBeat.map(beat => new Audio(process.env.PUBLIC_URL + beat.path)))
   // });
 
 
-  const songLength = () => {
-    for (let i = 0; i < song.length; i++) {
-      const length = song[i].duration
-      console.log(length)
-    }
-  }
+  // const songLength = () => {
+  //   for (let i = 0; i < song.length; i++) {
+  //     const length = song[i].duration
+  //     console.log(length)
+  //   }
+  // }
 
   const muted = () => {
     for (let i = 0; i < song.length; i++) {
@@ -112,19 +114,17 @@ function Beat() {
   const stop = () => {
     for (let i = 0; i < song.length; i++) {
       song[i].pause()
+      song[i].currentTime = 0
     }
     clearInterval(intervalID)
   }
 
-  // const stop = () => {
-  //   for (let i = 0; i < song.length; i++) {
-  //     if (audioSupport.duration > 0 && !audioSupport.paused) {
-  //       song[i].currentTime = 0;
-  //       song[i].play();
-  //     }
-  //   }
-  //   clearInterval(intervalID)
-  // }
+  const pause = () => {
+    for (let i = 0; i < song.length; i++) {
+      song[i].pause()
+    }
+    clearInterval(intervalID)
+  }
 
   const mute = (name) => {
     const newBeat = beats.map(beat => {
@@ -163,7 +163,7 @@ function Beat() {
           </Button>
         </Box>
         <Box>
-          <Button onClick={() => setPlaying(false)} startIcon={<PauseIcon/>} sx={{color: 'black'}}>
+          <Button startIcon={<PauseIcon/>} sx={{color: 'black'}}>
             Pause
           </Button>
         </Box>
