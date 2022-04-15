@@ -13,6 +13,7 @@ const initialBeat = [
     color: '#ffcece',
     name: 'uuho',
     mute: false,
+
   },
   {
     path: '/sounds/beat2.mp3',
@@ -59,7 +60,14 @@ const initialBeat = [
 ]
 
 const song = initialBeat.map(beat => new Audio(process.env.PUBLIC_URL + beat.path))
-const songLength = 17000
+
+const audio = new Audio(process.env.PUBLIC_URL + '/sounds/beat2.mp3');
+audio.addEventListener('loadedmetadata', function () {
+  const duration = audio.duration;
+  console.log("The duration of the song is of: " + duration + " seconds");
+}, false);
+
+// const songLength = 17000
 
 function Beat() {
   const [time, setTime] = useState("");
@@ -67,20 +75,10 @@ function Beat() {
   const [position, setPosition] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [intervalID, setIntervalID] = useState(null);
-  const [beatAudio, setBeatAudio] = useState([]);
-  const [songTime, setSongTime] = useState(0)
 
-  // useEffect(() => {
-  //   setBeatAudio(initialBeat.map(beat => new Audio(process.env.PUBLIC_URL + beat.path)))
-  // });
-
-
-  // const songLength = () => {
-  //   for (let i = 0; i < song.length; i++) {
-  //     const length = song[i].duration
-  //     console.log(length)
-  //   }
-  // }
+  useEffect(() => {
+    songDuration()
+  })
 
   const muted = () => {
     for (let i = 0; i < song.length; i++) {
@@ -113,28 +111,35 @@ function Beat() {
 
   const stop = () => {
     for (let i = 0; i < song.length; i++) {
-      song[i].pause()
       song[i].currentTime = 0
-    }
-    clearInterval(intervalID)
-  }
-
-  const pause = () => {
-    for (let i = 0; i < song.length; i++) {
       song[i].pause()
     }
     clearInterval(intervalID)
   }
 
   const mute = (name) => {
-    const newBeat = beats.map(beat => {
+    const newBeats = beats.map(beat => {
       if (beat.name === name) {
         beat.mute = !beat.mute
       }
       return beat
-
     })
-    setBeats(newBeat)
+    setBeats(newBeats)
+  }
+
+  const addDuration = (index, duration) => {
+    const newBeats = [...beats];
+    newBeats[index].duration = duration
+    setBeats(newBeats)
+  }
+
+  const songDuration = () => {
+    for (let i = 0; i < song.length; i++) {
+      song[i].addEventListener('loadedmetadata', function () {
+        const specificDuration = song[i].duration
+        addDuration(i, specificDuration)
+      }, false);
+    }
   }
 
   const runLoop = () => {
@@ -163,18 +168,10 @@ function Beat() {
           </Button>
         </Box>
         <Box>
-          <Button startIcon={<PauseIcon/>} sx={{color: 'black'}}>
-            Pause
-          </Button>
-        </Box>
-        <Box>
           <Button onClick={runLoop} startIcon={<AllInclusiveIcon/>} sx={{color: 'black'}}>
             Loop
           </Button>
         </Box>
-        {/*<form>*/}
-        {/*  <input placeholder="Choose Time" type="text" onChange={handleTiming} value={time}/>*/}
-        {/*</form>*/}
       </Box>
       <Grid container sx={{mt: 5, justifyContent: 'space-evenly'}}>
         <Grid item xs={12} md={4}>
@@ -214,11 +211,10 @@ function Beat() {
                 width: '2px',
                 top: 0,
                 bottom: 0,
-                left: (position / songLength * 100) + "%"
+                left: (position / beat.duration) * 100 + "%"
               }}/>
           </Paper>)}
         </Grid>
-        {/*</Box>*/}
       </Grid>
     </Container>
 
