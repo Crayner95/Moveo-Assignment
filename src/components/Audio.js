@@ -61,12 +61,6 @@ const initialBeat = [
 
 const song = initialBeat.map(beat => new Audio(process.env.PUBLIC_URL + beat.path))
 
-const audio = new Audio(process.env.PUBLIC_URL + '/sounds/beat2.mp3');
-audio.addEventListener('loadedmetadata', function () {
-  const duration = audio.duration;
-  console.log("The duration of the song is of: " + duration + " seconds");
-}, false);
-
 // const songLength = 17000
 
 function Beat() {
@@ -78,7 +72,7 @@ function Beat() {
 
   useEffect(() => {
     songDuration()
-  })
+  }, [])
 
   const muted = () => {
     for (let i = 0; i < song.length; i++) {
@@ -105,7 +99,7 @@ function Beat() {
       song[i].play()
     }
     setIntervalID(setInterval(() => {
-      setPosition(pos => pos + 100)
+      setPosition(pos => pos + 0.1)
     }, 100))
   }
 
@@ -139,6 +133,9 @@ function Beat() {
         const specificDuration = song[i].duration
         addDuration(i, specificDuration)
       }, false);
+      song[i].addEventListener('ended', function () {
+        setPlaying(false)
+      });
     }
   }
 
