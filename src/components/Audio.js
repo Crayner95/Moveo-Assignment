@@ -61,14 +61,12 @@ const initialBeat = [
 
 const song = initialBeat.map(beat => new Audio(process.env.PUBLIC_URL + beat.path))
 
-// const songLength = 17000
-
 function Beat() {
-  const [time, setTime] = useState("");
   const [beats, setBeats] = useState(initialBeat);
   const [position, setPosition] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [intervalID, setIntervalID] = useState(null);
+  const [loop, setLoop] = useState(false)
 
   useEffect(() => {
     songDuration()
@@ -89,13 +87,13 @@ function Beat() {
     if (playing) {
       start()
     } else {
-      stop()
+      pause()
     }
   }, [playing])
 
   const start = () => {
-    setPosition(0)
     for (let i = 0; i < song.length; i++) {
+      song[i].currentTime = position
       song[i].play()
     }
     setIntervalID(setInterval(() => {
@@ -104,8 +102,12 @@ function Beat() {
   }
 
   const stop = () => {
+    setPlaying(false);
+    setPosition(0)
+  }
+
+  const pause = () => {
     for (let i = 0; i < song.length; i++) {
-      song[i].currentTime = 0
       song[i].pause()
     }
     clearInterval(intervalID)
@@ -135,14 +137,26 @@ function Beat() {
       }, false);
       song[i].addEventListener('ended', function () {
         setPlaying(false)
+        setLoop(loop => {
+          if (loop) {
+            setPosition(0)
+            setPlaying(true)
+          }
+          return loop
+        })
       });
     }
   }
 
-  const runLoop = () => {
-    for (let i = 0; i < song.length; i++) {
-      song[i].loop = true
-    }
+  const handleLoop = () => {
+    setLoop(!loop)
+  }
+
+  const onClick = (e) => {
+    const length = beats[0].duration
+    const coordinates = e.nativeEvent.offsetX
+    const newPosition = length * (coordinates / e.target.clientWidth)
+    setPosition(newPosition)
   }
 
   return (
@@ -155,19 +169,39 @@ function Beat() {
                }}>
       <Box sx={{width: '50%', display: 'flex', justifyContent: 'space-evenly', backgroundColor: '#ff9f9f'}}>
         <Box sx={{display: 'flex', alignItems: 'center'}}>
-          <Button onClick={() => setPlaying(true)} startIcon={<PlayArrowIcon/>} sx={{color: 'black'}}>
-            Play
-          </Button>
+          {!playing &&
+            <Button onClick={() => setPlaying(true)} startIcon={<PlayArrowIcon/>} sx={{color: 'black'}}>
+              Play
+            </Button>
+          }
+          {playing &&
+            <Button onClick={() => setPlaying(true)} startIcon={<PlayArrowIcon sx={{color: 'blue'}}/>}
+                    sx={{color: 'blue'}}>
+              Playing
+            </Button>
+          }
         </Box>
         <Box>
-          <Button onClick={() => setPlaying(false)} startIcon={<StopIcon/>} sx={{color: 'black'}}>
+          <Button onClick={stop} startIcon={<StopIcon/>} sx={{color: 'black'}}>
             Stop
           </Button>
         </Box>
         <Box>
-          <Button onClick={runLoop} startIcon={<AllInclusiveIcon/>} sx={{color: 'black'}}>
-            Loop
+          <Button onClick={() => setPlaying(false)} startIcon={<PauseIcon/>} sx={{color: 'black'}}>
+            Pause
           </Button>
+        </Box>
+        <Box>
+          {!loop &&
+            <Button onClick={handleLoop} startIcon={<AllInclusiveIcon/>} sx={{color: 'black'}}>
+              Loop
+            </Button>
+          }
+          {loop &&
+            <Button onClick={handleLoop} startIcon={<AllInclusiveIcon sx={{color: 'blue'}}/>} sx={{color: 'blue'}}>
+              Looping
+            </Button>
+          }
         </Box>
       </Box>
       <Grid container sx={{mt: 5, justifyContent: 'space-evenly'}}>
@@ -193,6 +227,7 @@ function Beat() {
         {/*<Box sx={{height: 200, width: 5}}>*/}
         <Grid item xs={12} md={8}>
           {beats.map(beat => <Paper key={beats.name}
+                                    onClick={onClick}
                                     elevation={3}
                                     sx={{
                                       position: 'relative',
