@@ -66,7 +66,8 @@ function Beat() {
   const [position, setPosition] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [intervalID, setIntervalID] = useState(null);
-  const [loop, setLoop] = useState(false)
+  const [loop, setLoop] = useState(false);
+  const [ended, setEnded] = useState(false)
 
   useEffect(() => {
     songDuration()
@@ -91,11 +92,26 @@ function Beat() {
     }
   }, [playing])
 
+  useEffect(() => {
+    setEnded(false)
+    if (ended) {
+      if (loop) {
+        setPlaying(true)
+      }
+    }
+  }, [ended])
+
+  const setCurrentTime = (pos) => {
+    for (let i = 0; i < song.length; i++) {
+      song[i].currentTime = pos
+    }
+  }
+
   const start = () => {
     for (let i = 0; i < song.length; i++) {
-      song[i].currentTime = position
       song[i].play()
     }
+    setCurrentTime(position)
     setIntervalID(setInterval(() => {
       setPosition(pos => pos + 0.1)
     }, 100))
@@ -137,13 +153,8 @@ function Beat() {
       }, false);
       song[i].addEventListener('ended', function () {
         setPlaying(false)
-        setLoop(loop => {
-          if (loop) {
-            setPosition(0)
-            setPlaying(true)
-          }
-          return loop
-        })
+        setEnded(true)
+        setPosition(0)
       });
     }
   }
@@ -157,6 +168,7 @@ function Beat() {
     const coordinates = e.nativeEvent.offsetX
     const newPosition = length * (coordinates / e.target.clientWidth)
     setPosition(newPosition)
+    setCurrentTime(newPosition)
   }
 
   return (
